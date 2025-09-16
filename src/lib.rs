@@ -5,8 +5,9 @@ pub fn fix(input: impl Into<String>) -> String {
 struct Parser {
     input: String,
     result: String,
-    current: char,
     state: ParserState,
+    current: char,
+    lexeme: String,
     need_close: Vec<char>,
 }
 
@@ -27,8 +28,9 @@ impl Parser {
         Self {
             input: input.into(),
             result: String::new(),
-            current: '\0',
             state: ParserState::ValueStart,
+            current: '\0',
+            lexeme: String::new(),
             need_close: Vec::new(),
         }
     }
@@ -47,6 +49,7 @@ impl Parser {
                 ParserState::Null => self.handle_null(),
 
                 ParserState::Number => self.handle_number(),
+                ParserState::Float => self.handle_float(),
 
                 _ => todo!(),
             }
@@ -56,8 +59,6 @@ impl Parser {
     }
 
     fn value_start(&mut self) {
-        self.result.push(self.current);
-
         match self.current {
             't' => {
                 self.state = ParserState::True;
@@ -73,19 +74,23 @@ impl Parser {
 
             '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-' => {
                 self.state = ParserState::Number;
+                self.lexeme = String::from(self.current);
             }
 
             '{' => {
                 self.state = ParserState::Object;
+                self.result.push(self.current);
                 self.need_close.push('}');
             }
 
             '"' => {
                 self.state = ParserState::String;
+                self.lexeme = String::from(self.current);
                 self.need_close.push('"');
             }
 
             '[' => {
+                self.result.push(self.current);
                 self.need_close.push(']');
             }
 
@@ -94,34 +99,60 @@ impl Parser {
     }
 
     fn handle_true(&mut self) {
-        self.result.push_str("rue");
+        self.result.push_str("true");
         self.state = ParserState::ValueEnd;
     }
 
     fn handle_false(&mut self) {
-        self.result.push_str("alse");
+        self.result.push_str("false");
         self.state = ParserState::ValueEnd;
     }
 
     fn handle_null(&mut self) {
-        self.result.push_str("ull");
+        self.result.push_str("null");
         self.state = ParserState::ValueEnd;
     }
 
     fn handle_number(&mut self) {
         match self.current {
             '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'e' | 'E' => {
-                self.result.push(self.current);
+                self.lexeme.push(self.current);
             }
 
             '.' => {
-                self.result.push(self.current);
+                self.lexeme.push(self.current);
                 self.state = ParserState::Float;
             }
 
             _ => {
+                self.result.push_str(&self.lexeme);
                 self.state = ParserState::ValueEnd;
             }
+        }
+    }
+
+    fn handle_float(&mut self) {
+        match self.current {
+            '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'e' | 'E' => {
+                self.lexeme.push(self.current);
+            }
+
+            _ => {
+                self.result.push_str(&self.lexeme);
+                self.state = ParserState::ValueEnd;
+            }
+        }
+    }
+
+    fn handle_string(&mut self) {
+        self.lexeme.push(self.current);
+
+        if self.current == '"'
+            && let Some(last) = self.lexeme.chars().last()
+            && last != '\\'
+        {
+            self.result.push_str(&self.lexeme);
+            self.state = ParserState::ValueEnd;
         }
     }
 }
