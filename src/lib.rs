@@ -15,8 +15,9 @@ enum ParserState {
     True,
     False,
     Null,
-    Object,
     Number,
+    Float,
+    Object,
     String,
     ValueEnd,
 }
@@ -40,9 +41,12 @@ impl Parser {
 
             match self.state {
                 ParserState::ValueStart => self.value_start(),
+
                 ParserState::True => self.handle_true(),
                 ParserState::False => self.handle_false(),
                 ParserState::Null => self.handle_null(),
+
+                ParserState::Number => self.handle_number(),
 
                 _ => todo!(),
             }
@@ -52,6 +56,8 @@ impl Parser {
     }
 
     fn value_start(&mut self) {
+        self.result.push(self.current);
+
         match self.current {
             't' => {
                 self.state = ParserState::True;
@@ -65,12 +71,13 @@ impl Parser {
                 self.state = ParserState::Null;
             }
 
-            '{' => {
-                self.state = ParserState::Object;
+            '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-' => {
+                self.state = ParserState::Number;
             }
 
-            '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-                self.state = ParserState::Number;
+            '{' => {
+                self.state = ParserState::Object;
+                self.need_close.push('}');
             }
 
             '"' => {
@@ -87,17 +94,34 @@ impl Parser {
     }
 
     fn handle_true(&mut self) {
-        self.result.push_str("true");
+        self.result.push_str("rue");
         self.state = ParserState::ValueEnd;
     }
 
     fn handle_false(&mut self) {
-        self.result.push_str("false");
+        self.result.push_str("alse");
         self.state = ParserState::ValueEnd;
     }
 
     fn handle_null(&mut self) {
-        self.result.push_str("null");
+        self.result.push_str("ull");
         self.state = ParserState::ValueEnd;
+    }
+
+    fn handle_number(&mut self) {
+        match self.current {
+            '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'e' | 'E' => {
+                self.result.push(self.current);
+            }
+
+            '.' => {
+                self.result.push(self.current);
+                self.state = ParserState::Float;
+            }
+
+            _ => {
+                self.state = ParserState::ValueEnd;
+            }
+        }
     }
 }
