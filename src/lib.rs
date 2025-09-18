@@ -18,8 +18,10 @@ enum ParserState {
     Null,
     Number,
     Float,
-    Object,
     String,
+    Object,
+    ObjectKey,
+    ObjectKeyEnd,
     ValueEnd,
 }
 
@@ -51,6 +53,12 @@ impl Parser {
                 ParserState::Number => self.handle_number(),
                 ParserState::Float => self.handle_float(),
 
+                ParserState::String => self.handle_string(),
+
+                ParserState::Object => self.handle_object(),
+                ParserState::ObjectKey => self.handle_object_key(),
+                ParserState::ObjectKeyEnd => self.handle_object_key_end(),
+
                 _ => todo!(),
             }
         }
@@ -77,16 +85,16 @@ impl Parser {
                 self.lexeme = String::from(self.current);
             }
 
-            '{' => {
-                self.state = ParserState::Object;
-                self.result.push(self.current);
-                self.need_close.push('}');
-            }
-
             '"' => {
                 self.state = ParserState::String;
                 self.lexeme = String::from(self.current);
                 self.need_close.push('"');
+            }
+
+            '{' => {
+                self.state = ParserState::Object;
+                self.result.push(self.current);
+                self.need_close.push('}');
             }
 
             '[' => {
@@ -153,6 +161,48 @@ impl Parser {
         {
             self.result.push_str(&self.lexeme);
             self.state = ParserState::ValueEnd;
+        }
+    }
+
+    fn handle_object(&mut self) {
+        match self.current {
+            '"' => {
+                self.lexeme.push(self.current);
+                self.need_close.push('"');
+                self.state = ParserState::ObjectKey;
+            }
+
+            '}' => {
+                self.result.push('}');
+                self.need_close.pop();
+                self.state = ParserState::ValueEnd;
+            }
+
+            _ => {
+                self.state = ParserState::ValueEnd;
+            }
+        }
+    }
+
+    fn handle_object_key(&mut self) {
+        match self.current {
+            '"' => {
+                self.lexeme.push(self.current);
+                self.result.push_str(&self.lexeme);
+                self.need_close.pop();
+                self.state = ParserState::ObjectKeyEnd;
+            }
+
+            _ => {
+                self.lexeme.push(self.current);
+            }
+        }
+    }
+
+    fn handle_object_key_end(&mut self) {
+        if self.current == ':' {
+            self.result.push(self.current);
+            self.state = ParserState::ValueStart;
         }
     }
 }
