@@ -13,7 +13,7 @@ struct Parser {
 
 enum ParserState {
     ValueStart,
-    Number,
+    Integer,
     Float,
     String,
     ObjectStart,
@@ -43,7 +43,7 @@ impl Parser {
             match self.state {
                 ParserState::ValueStart => self.handle_value_start(),
 
-                ParserState::Number => self.handle_number(),
+                ParserState::Integer => self.handle_integer(),
                 ParserState::Float => self.handle_float(),
 
                 ParserState::String => self.handle_string(),
@@ -57,7 +57,6 @@ impl Parser {
         }
 
         self.handle_end();
-
         self.result.to_owned()
     }
 
@@ -76,7 +75,7 @@ impl Parser {
             }
 
             '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-' => {
-                self.state = ParserState::Number;
+                self.state = ParserState::Integer;
                 self.lexeme = String::from(self.current);
             }
 
@@ -130,7 +129,7 @@ impl Parser {
         self.state = ParserState::ValueEnd;
     }
 
-    fn handle_number(&mut self) {
+    fn handle_integer(&mut self) {
         match self.current {
             '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
                 self.lexeme.push(self.current);
@@ -301,7 +300,7 @@ impl Parser {
 
     fn handle_end(&mut self) {
         match self.state {
-            ParserState::Number | ParserState::Float => {
+            ParserState::Integer | ParserState::Float => {
                 self.normalize_number();
                 self.result.push_str(&self.lexeme);
             }
