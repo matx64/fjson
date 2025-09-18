@@ -63,15 +63,15 @@ impl Parser {
 
     fn handle_value_start(&mut self) {
         match self.current {
-            't' => {
+            't' | 'T' => {
                 self.handle_true();
             }
 
-            'f' => {
+            'f' | 'F' => {
                 self.handle_false();
             }
 
-            'n' => {
+            'n' | 'N' => {
                 self.handle_null();
             }
 
@@ -148,6 +148,8 @@ impl Parser {
             '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'e' | 'E' => {
                 self.lexeme.push(self.current);
             }
+
+            '.' => {}
 
             _ => {
                 self.result.push_str(&self.lexeme);
@@ -247,11 +249,11 @@ impl Parser {
                 self.result.push_str(&self.lexeme);
                 self.need_close.pop();
 
-                self.result.push_str(": \"\"}");
+                self.result.push_str(": null}");
             }
 
             ParserState::ObjectKeyEnd => {
-                self.result.push_str(": \"\"}");
+                self.result.push_str(": null}");
             }
 
             _ => {}
