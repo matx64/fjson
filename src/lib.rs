@@ -80,6 +80,11 @@ impl Parser {
                 self.lexeme = String::from(self.current);
             }
 
+            '.' => {
+                self.state = ParserState::Float;
+                self.lexeme = String::from("0.");
+            }
+
             '"' => {
                 self.state = ParserState::String;
                 self.lexeme = String::from(self.current);
@@ -127,16 +132,36 @@ impl Parser {
 
     fn handle_number(&mut self) {
         match self.current {
-            '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'e' | 'E' => {
+            '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
                 self.lexeme.push(self.current);
             }
 
+            'e' | 'E' => {
+                if !self.lexeme.contains('e') {
+                    self.lexeme.push('e');
+                }
+            }
+
+            '+' | '-' => {
+                if let Some(last) = self.lexeme.chars().last()
+                    && last == 'e'
+                {
+                    self.lexeme.push(self.current);
+                }
+            }
+
             '.' => {
+                if let Some(last) = self.lexeme.chars().last()
+                    && last == '-'
+                {
+                    self.lexeme.push('0');
+                }
                 self.lexeme.push(self.current);
                 self.state = ParserState::Float;
             }
 
             _ => {
+                self.normalize_number();
                 self.result.push_str(&self.lexeme);
                 self.state = ParserState::ValueEnd;
             }
@@ -145,17 +170,64 @@ impl Parser {
 
     fn handle_float(&mut self) {
         match self.current {
-            '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'e' | 'E' => {
+            '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
                 self.lexeme.push(self.current);
+            }
+
+            'e' | 'E' => {
+                if !self.lexeme.contains('e') {
+                    self.lexeme.push('e');
+                }
+            }
+
+            '+' | '-' => {
+                if let Some(last) = self.lexeme.chars().last()
+                    && last == 'e'
+                {
+                    self.lexeme.push(self.current);
+                }
             }
 
             '.' => {}
 
             _ => {
+                self.normalize_number();
                 self.result.push_str(&self.lexeme);
                 self.state = ParserState::ValueEnd;
             }
         }
+    }
+
+    fn normalize_number(&mut self) {
+        let mut result = {
+            if self.lexeme.starts_with('-') {
+                self.lexeme[1..].to_string()
+            } else {
+                self.lexeme.clone()
+            }
+        };
+
+        while result.starts_with('0') {
+            result.remove(0);
+        }
+
+        if result.starts_with('.') {
+            result.insert(0, '0');
+        }
+
+        if result.ends_with('.') {
+            result.push('0');
+        }
+
+        if self.lexeme.starts_with('-') {
+            result.insert(0, '-');
+        }
+
+        if result.is_empty() || result == "-" {
+            result = String::from('0');
+        }
+
+        self.lexeme = result;
     }
 
     fn handle_string(&mut self) {
@@ -230,6 +302,7 @@ impl Parser {
     fn handle_end(&mut self) {
         match self.state {
             ParserState::Number | ParserState::Float => {
+                self.normalize_number();
                 self.result.push_str(&self.lexeme);
             }
 
