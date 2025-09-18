@@ -13,13 +13,10 @@ struct Parser {
 
 enum ParserState {
     ValueStart,
-    True,
-    False,
-    Null,
     Number,
     Float,
     String,
-    Object,
+    ObjectStart,
     ObjectKey,
     ObjectKeyEnd,
     ValueEnd,
@@ -44,40 +41,40 @@ impl Parser {
             self.current = ch;
 
             match self.state {
-                ParserState::ValueStart => self.value_start(),
-
-                ParserState::True => self.handle_true(),
-                ParserState::False => self.handle_false(),
-                ParserState::Null => self.handle_null(),
+                ParserState::ValueStart => self.handle_value_start(),
 
                 ParserState::Number => self.handle_number(),
                 ParserState::Float => self.handle_float(),
 
                 ParserState::String => self.handle_string(),
 
-                ParserState::Object => self.handle_object(),
+                ParserState::ObjectStart => self.handle_object_start(),
                 ParserState::ObjectKey => self.handle_object_key(),
                 ParserState::ObjectKeyEnd => self.handle_object_key_end(),
 
-                _ => todo!(),
+                ParserState::ValueEnd => self.handle_value_end(),
             }
+        }
+
+        while let Some(ch) = self.need_close.pop() {
+            self.result.push(ch);
         }
 
         self.result.to_owned()
     }
 
-    fn value_start(&mut self) {
+    fn handle_value_start(&mut self) {
         match self.current {
             't' => {
-                self.state = ParserState::True;
+                self.handle_true();
             }
 
             'f' => {
-                self.state = ParserState::False;
+                self.handle_false();
             }
 
             'n' => {
-                self.state = ParserState::Null;
+                self.handle_null();
             }
 
             '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '-' => {
@@ -92,7 +89,7 @@ impl Parser {
             }
 
             '{' => {
-                self.state = ParserState::Object;
+                self.state = ParserState::ObjectStart;
                 self.result.push(self.current);
                 self.need_close.push('}');
             }
@@ -100,6 +97,15 @@ impl Parser {
             '[' => {
                 self.result.push(self.current);
                 self.need_close.push(']');
+            }
+
+            ']' => {
+                if let Some(last) = self.need_close.last()
+                    && *last == ']'
+                {
+                    self.result.push(self.current);
+                    self.need_close.pop();
+                }
             }
 
             _ => {}
@@ -164,7 +170,7 @@ impl Parser {
         }
     }
 
-    fn handle_object(&mut self) {
+    fn handle_object_start(&mut self) {
         match self.current {
             '"' => {
                 self.lexeme.push(self.current);
@@ -203,6 +209,20 @@ impl Parser {
         if self.current == ':' {
             self.result.push(self.current);
             self.state = ParserState::ValueStart;
+        }
+    }
+
+    fn handle_value_end(&mut self) {
+        if self.current == ','
+            && let Some(last) = self.need_close.last()
+        {
+            if *last == '}' {
+                self.result.push(self.current);
+                self.state = ParserState::ObjectKey;
+            } else if *last == ']' {
+                self.result.push(self.current);
+                self.state = ParserState::ValueStart;
+            }
         }
     }
 }
