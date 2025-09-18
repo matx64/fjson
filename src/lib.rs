@@ -56,9 +56,7 @@ impl Parser {
             }
         }
 
-        while let Some(ch) = self.need_close.pop() {
-            self.result.push(ch);
-        }
+        self.handle_end();
 
         self.result.to_owned()
     }
@@ -166,6 +164,7 @@ impl Parser {
             && last != '\\'
         {
             self.result.push_str(&self.lexeme);
+            self.need_close.pop();
             self.state = ParserState::ValueEnd;
         }
     }
@@ -223,6 +222,43 @@ impl Parser {
                 self.result.push(self.current);
                 self.state = ParserState::ValueStart;
             }
+        }
+    }
+
+    fn handle_end(&mut self) {
+        match self.state {
+            ParserState::Number | ParserState::Float => {
+                self.result.push_str(&self.lexeme);
+            }
+
+            ParserState::String => {
+                self.lexeme.push('"');
+                self.result.push_str(&self.lexeme);
+                self.need_close.pop();
+            }
+
+            ParserState::ObjectStart => {
+                self.result.push('}');
+                self.need_close.pop();
+            }
+
+            ParserState::ObjectKey => {
+                self.lexeme.push('"');
+                self.result.push_str(&self.lexeme);
+                self.need_close.pop();
+
+                self.result.push_str(": \"\"}");
+            }
+
+            ParserState::ObjectKeyEnd => {
+                self.result.push_str(": \"\"}");
+            }
+
+            _ => {}
+        }
+
+        while let Some(ch) = self.need_close.pop() {
+            self.result.push(ch);
         }
     }
 }
