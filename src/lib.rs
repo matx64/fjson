@@ -16,7 +16,7 @@ enum ParserState {
     Integer,
     Float,
     String,
-    ObjectStart,
+    Object,
     ObjectKey,
     ValueEnd,
 }
@@ -47,7 +47,7 @@ impl Parser {
 
                 ParserState::String => self.handle_string(),
 
-                ParserState::ObjectStart => self.handle_object_start(),
+                ParserState::Object => self.handle_object(),
                 ParserState::ObjectKey => self.handle_object_key(),
 
                 ParserState::ValueEnd => self.handle_value_end(),
@@ -89,7 +89,7 @@ impl Parser {
             }
 
             '{' => {
-                self.state = ParserState::ObjectStart;
+                self.state = ParserState::Object;
                 self.result.push(self.current);
                 self.need_close.push('}');
             }
@@ -255,15 +255,20 @@ impl Parser {
         }
     }
 
-    fn handle_object_start(&mut self) {
+    fn handle_object(&mut self) {
         match self.current {
             '"' => {
-                self.lexeme.push(self.current);
+                self.lexeme = String::from(self.current);
                 self.need_close.push('"');
                 self.state = ParserState::ObjectKey;
             }
 
             '}' => {
+                if let Some(last) = self.result.chars().last()
+                    && last == ','
+                {
+                    self.result.pop();
+                }
                 self.result.push('}');
                 self.need_close.pop();
                 self.state = ParserState::ValueEnd;
@@ -278,8 +283,7 @@ impl Parser {
     fn handle_object_key(&mut self) {
         match self.current {
             '"' => {
-                self.lexeme.push(self.current);
-                self.lexeme.push(':');
+                self.lexeme.push_str("\":");
                 self.result.push_str(&self.lexeme);
                 self.need_close.pop();
                 self.state = ParserState::ValueStart;
@@ -299,7 +303,7 @@ impl Parser {
         {
             if *last == '}' {
                 self.result.push(self.current);
-                self.state = ParserState::ObjectKey;
+                self.state = ParserState::Object;
             } else if *last == ']' {
                 self.result.push(self.current);
                 self.state = ParserState::ValueStart;
@@ -341,7 +345,7 @@ impl Parser {
                 self.need_close.pop();
             }
 
-            ParserState::ObjectStart => {
+            ParserState::Object => {
                 self.result.push('}');
                 self.need_close.pop();
             }
