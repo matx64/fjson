@@ -83,3 +83,29 @@ fn test_strings() {
     // newline escape
     assert_eq!(String::from("\"line1\nline2\""), fix("\"line1\nline2\""));
 }
+
+#[test]
+fn test_arrays() {
+    assert_eq!(String::from("[]"), fix("[]"));
+    assert_eq!(String::from("[1]"), fix("[1]"));
+    assert_eq!(String::from("[1,2]"), fix("[1,2]"));
+    assert_eq!(String::from("[1,2,3]"), fix("[1,2, 3]"));
+    assert_eq!(
+        String::from("[1,\"test\",1.5,null,true]"),
+        fix("[1,\"test\", 1.5, null, true]")
+    );
+
+    // unclosed
+    assert_eq!(String::from("[]"), fix("["));
+    assert_eq!(String::from("[1]"), fix("[1"));
+    assert_eq!(String::from("[1,2]"), fix("[1, 2"));
+
+    // trailing comma
+    assert_eq!(String::from("[]"), fix("[,"));
+    assert_eq!(String::from("[1]"), fix("[1,"));
+    assert_eq!(String::from("[1,2]"), fix("[1, 2,"));
+
+    // nested
+    assert_eq!(String::from("[[[]]]"), fix("[[[]]]"));
+    assert_eq!(String::from("[[[]]]"), fix("[[[],]"));
+}
