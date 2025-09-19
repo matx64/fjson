@@ -26,3 +26,37 @@ fn test_static_values() {
     assert_eq!(String::from("false"), fix("\nfalse\t"));
     assert_eq!(String::from("null"), fix("null "));
 }
+
+#[test]
+fn test_numbers() {
+    // Integers
+    assert_eq!(String::from("0"), fix("0"));
+    assert_eq!(String::from("1"), fix("1"));
+    assert_eq!(String::from("12"), fix("12"));
+    assert_eq!(String::from("1230000"), fix("1230000"));
+
+    // Leading zeros
+    assert_eq!(String::from("0"), fix("00"));
+    assert_eq!(String::from("123"), fix("000123"));
+
+    // Negatives
+    assert_eq!(String::from("-1"), fix("-1"));
+    assert_eq!(String::from("-123"), fix("-123"));
+
+    // Floats
+    assert_eq!(String::from("123.01"), fix("123.01"));
+    assert_eq!(String::from("123.0001"), fix("123.0001"));
+    assert_eq!(String::from("0.5"), fix(".5"));
+    assert_eq!(String::from("123.0"), fix("123."));
+    assert_eq!(String::from("-123.0"), fix("-123."));
+    assert_eq!(String::from("123.0001"), fix("123.00.01"));
+
+    // Exponents
+    assert_eq!(String::from("123e1"), fix("123e1"));
+    assert_eq!(String::from("123e2"), fix("123E2"));
+    assert_eq!(String::from("1e+2"), fix("1e+2"));
+    assert_eq!(String::from("1e-2"), fix("1e-2"));
+    assert_eq!(String::from("1e-10"), fix("1E-10"));
+    assert_eq!(String::from("1"), fix("1e"));
+    assert_eq!(String::from("100"), fix("100e+"));
+}
