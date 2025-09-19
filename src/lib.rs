@@ -18,7 +18,6 @@ enum ParserState {
     String,
     ObjectStart,
     ObjectKey,
-    ObjectKeyEnd,
     ValueEnd,
 }
 
@@ -50,7 +49,6 @@ impl Parser {
 
                 ParserState::ObjectStart => self.handle_object_start(),
                 ParserState::ObjectKey => self.handle_object_key(),
-                ParserState::ObjectKeyEnd => self.handle_object_key_end(),
 
                 ParserState::ValueEnd => self.handle_value_end(),
             }
@@ -162,7 +160,7 @@ impl Parser {
             _ => {
                 self.normalize_number();
                 self.result.push_str(&self.lexeme);
-                self.state = ParserState::ValueEnd;
+                self.handle_value_end();
             }
         }
     }
@@ -192,7 +190,7 @@ impl Parser {
             _ => {
                 self.normalize_number();
                 self.result.push_str(&self.lexeme);
-                self.state = ParserState::ValueEnd;
+                self.handle_value_end();
             }
         }
     }
@@ -214,8 +212,15 @@ impl Parser {
             result.insert(0, '0');
         }
 
-        if result.ends_with('.') {
-            result.push('0');
+        let mut check_end = true;
+        while check_end {
+            if result.ends_with('.') {
+                result.push('0');
+            } else if result.ends_with('e') || result.ends_with("-") || result.ends_with("+") {
+                result.pop();
+            } else {
+                check_end = false;
+            }
         }
 
         if self.lexeme.starts_with('-') {
@@ -257,7 +262,7 @@ impl Parser {
             }
 
             _ => {
-                self.state = ParserState::ValueEnd;
+                self.handle_value_end();
             }
         }
     }
@@ -266,9 +271,10 @@ impl Parser {
         match self.current {
             '"' => {
                 self.lexeme.push(self.current);
+                self.lexeme.push(':');
                 self.result.push_str(&self.lexeme);
                 self.need_close.pop();
-                self.state = ParserState::ObjectKeyEnd;
+                self.state = ParserState::ValueStart;
             }
 
             _ => {
@@ -277,14 +283,9 @@ impl Parser {
         }
     }
 
-    fn handle_object_key_end(&mut self) {
-        if self.current == ':' {
-            self.result.push(self.current);
-            self.state = ParserState::ValueStart;
-        }
-    }
-
     fn handle_value_end(&mut self) {
+        self.state = ParserState::ValueEnd;
+
         if self.current == ','
             && let Some(last) = self.need_close.last()
         {
@@ -300,6 +301,18 @@ impl Parser {
 
     fn handle_end(&mut self) {
         match self.state {
+            ParserState::ValueStart => {
+                if let Some(last_bracket) = self.need_close.last()
+                    && let Some(last_char) = self.result.chars().last()
+                {
+                    if last_char == ',' {
+                        self.result.pop();
+                    } else if *last_bracket == '}' {
+                        self.result.push_str("null");
+                    }
+                }
+            }
+
             ParserState::Integer | ParserState::Float => {
                 self.normalize_number();
                 self.result.push_str(&self.lexeme);
@@ -324,10 +337,6 @@ impl Parser {
                 self.result.push_str(": null}");
             }
 
-            ParserState::ObjectKeyEnd => {
-                self.result.push_str(": null}");
-            }
-
             _ => {}
         }
 
@@ -336,3 +345,6 @@ impl Parser {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
