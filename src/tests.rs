@@ -60,3 +60,26 @@ fn test_numbers() {
     assert_eq!(String::from("1"), fix("1e"));
     assert_eq!(String::from("100"), fix("100e+"));
 }
+
+#[test]
+fn test_strings() {
+    assert_eq!(String::from("\"test\""), fix("\"test\""));
+
+    // missing closing quote
+    assert_eq!(String::from("\"test (TRUNCATED)\""), fix("\"test"));
+
+    // escaped quotes
+    assert_eq!(
+        String::from("\"a \\\"quote\\\" inside\""),
+        fix("\"a \\\"quote\\\" inside\"")
+    );
+
+    // backslash escaping
+    assert_eq!(
+        String::from("\"path \\\\ to \\\\ file\""),
+        fix("\"path \\\\ to \\\\ file\"")
+    );
+
+    // newline escape
+    assert_eq!(String::from("\"line1\nline2\""), fix("\"line1\nline2\""));
+}

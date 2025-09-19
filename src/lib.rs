@@ -235,15 +235,23 @@ impl Parser {
     }
 
     fn handle_string(&mut self) {
-        self.lexeme.push(self.current);
+        match self.current {
+            '"' => {
+                if let Some(last) = self.lexeme.chars().last()
+                    && last == '\\'
+                {
+                    self.lexeme.push(self.current);
+                } else {
+                    self.lexeme.push(self.current);
+                    self.result.push_str(&self.lexeme);
+                    self.need_close.pop();
+                    self.state = ParserState::ValueEnd;
+                }
+            }
 
-        if self.current == '"'
-            && let Some(last) = self.lexeme.chars().last()
-            && last != '\\'
-        {
-            self.result.push_str(&self.lexeme);
-            self.need_close.pop();
-            self.state = ParserState::ValueEnd;
+            _ => {
+                self.lexeme.push(self.current);
+            }
         }
     }
 
@@ -319,7 +327,16 @@ impl Parser {
             }
 
             ParserState::String => {
-                self.lexeme.push('"');
+                if self.lexeme.ends_with('\\') {
+                    self.lexeme.pop();
+                }
+
+                if self.lexeme.len() == 1 {
+                    self.lexeme.push('"');
+                } else {
+                    self.lexeme.push_str(" (TRUNCATED)\"");
+                }
+
                 self.result.push_str(&self.lexeme);
                 self.need_close.pop();
             }

@@ -12,10 +12,10 @@
 
 ## Roadmap
 
-- [ ] Parser + Fixer
+- [x] Parser + Fixer
+- [ ] Test suite
 - [ ] Deserialization
 - [ ] Formatting (beautifier)
-- [ ] Test suite
 - [ ] WebAssembly version
 - [ ] CLI version
 
