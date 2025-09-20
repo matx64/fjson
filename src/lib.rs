@@ -298,15 +298,18 @@ impl Parser {
     fn handle_value_end(&mut self) {
         self.state = ParserState::ValueEnd;
 
-        if self.current == ','
-            && let Some(last) = self.need_close.last()
-        {
-            if *last == '}' {
+        if let Some(next_to_close) = self.need_close.last() {
+            if self.current == *next_to_close {
                 self.result.push(self.current);
-                self.state = ParserState::Object;
-            } else if *last == ']' {
-                self.result.push(self.current);
-                self.state = ParserState::ValueStart;
+                self.need_close.pop();
+            } else if self.current == ',' {
+                if *next_to_close == '}' {
+                    self.result.push(self.current);
+                    self.state = ParserState::Object;
+                } else if *next_to_close == ']' {
+                    self.result.push(self.current);
+                    self.state = ParserState::ValueStart;
+                }
             }
         }
     }
@@ -314,12 +317,12 @@ impl Parser {
     fn handle_end(&mut self) {
         match self.state {
             ParserState::ValueStart => {
-                if let Some(last_bracket) = self.need_close.last()
-                    && let Some(last_char) = self.result.chars().last()
+                if let Some(next_to_close) = self.need_close.last()
+                    && let Some(last) = self.result.chars().last()
                 {
-                    if last_char == ',' {
+                    if last == ',' {
                         self.result.pop();
-                    } else if *last_bracket == '}' {
+                    } else if *next_to_close == '}' {
                         self.result.push_str("null");
                     }
                 }
@@ -346,6 +349,11 @@ impl Parser {
             }
 
             ParserState::Object => {
+                if let Some(last) = self.result.chars().last()
+                    && last == ','
+                {
+                    self.result.pop();
+                }
                 self.result.push('}');
                 self.need_close.pop();
             }
