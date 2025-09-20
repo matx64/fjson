@@ -1,9 +1,7 @@
 [package]
-name = "fjson"
+name = "fjson-cli"
 version = "0.1.0"
 edition = "2024"
 
-[workspace]
-members = [".", "cli"]
-
 [dependencies]
+fjson = { path = ".." }

@@ -5,3 +5,10 @@ version = 4
 [[package]]
 name = "fjson"
 version = "0.1.0"
+
+[[package]]
+name = "fjson-cli"
+version = "0.1.0"
+dependencies = [
+ "fjson",
+]
