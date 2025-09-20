@@ -109,3 +109,41 @@ fn test_arrays() {
     assert_eq!(String::from("[[[]]]"), fix("[[[]]]"));
     assert_eq!(String::from("[[[]]]"), fix("[[[],]"));
 }
+
+#[test]
+fn test_objects() {
+    assert_eq!(String::from("{}"), fix("{}"));
+    assert_eq!(String::from("{\"k\":1}"), fix("{\"k\":1}"));
+    assert_eq!(
+        String::from("{\"k\":1,\"k0\":true}"),
+        fix("{\"k\":1,\"k0\":true}")
+    );
+    assert_eq!(
+        String::from("{\"nums\":[1,2,3]}"),
+        fix("{\"nums\":[1,2,3]}")
+    );
+    assert_eq!(
+        String::from("{\"list\":[{\"id\":1},{\"id\":2}]}"),
+        fix("{\"list\":[{\"id\":1},{\"id\":2}]}")
+    );
+    assert_eq!(
+        String::from("{\"grid\":[[1,2],[3,4]]}"),
+        fix("{\"grid\":[[1,2],[3,4]]}")
+    );
+    assert_eq!(String::from("{\"a\":{\"b\":2}}"), fix("{\"a\": {\"b\":2}"));
+    assert_eq!(
+        String::from("{\"a\":{\"b\":{\"c\":{\"d\":42}}}}"),
+        fix("{\"a\":{\"b\":{\"c\":{\"d\":42}}}}")
+    );
+
+    // unclosed
+    assert_eq!(String::from("{}"), fix("{"));
+    assert_eq!(String::from("{\"k\":1}"), fix("{\"k\":1"));
+
+    // trailing comma
+    assert_eq!(String::from("{\"a\":1}"), fix("{\"a\":1,"));
+    assert_eq!(String::from("{\"a\":1}"), fix("{\"a\":1,},,"));
+
+    // duplicated keys
+    assert_eq!(String::from("{\"a\":1,\"a\":2}"), fix("{\"a\":1,\"a\":2}"));
+}
