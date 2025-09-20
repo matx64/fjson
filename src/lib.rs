@@ -55,6 +55,10 @@ impl Parser {
         }
 
         self.handle_end();
+
+        if self.result.is_empty() {
+            self.result = Self::new(format!("\"{}\"", self.input)).parse_and_fix();
+        }
         self.result.to_owned()
     }
 
@@ -274,8 +278,10 @@ impl Parser {
                 self.state = ParserState::ValueEnd;
             }
 
-            _ => {
-                self.handle_value_end();
+            val => {
+                if !val.is_whitespace() {
+                    self.handle_value_end();
+                }
             }
         }
     }
@@ -289,8 +295,10 @@ impl Parser {
                 self.state = ParserState::ValueStart;
             }
 
-            _ => {
-                self.lexeme.push(self.current);
+            val => {
+                if !val.is_whitespace() {
+                    self.lexeme.push(self.current);
+                }
             }
         }
     }
