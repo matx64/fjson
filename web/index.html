@@ -19,11 +19,12 @@
       flex-direction: column;
       gap: 3rem;
       text-align: center;
+      max-width: 900px !important;
     }
 
     header,
     header * {
-      margin: 0;
+      margin: 0 !important;
     }
 
     section {
@@ -36,12 +37,15 @@
       gap: 1rem;
 
       .textarea-div {
+        flex-grow: 1;
         display: flex;
         flex-direction: column;
 
         textarea {
           flex-grow: 1;
           border: 1px solid var(--form-fg-placeholder);
+          font-family: monospace;
+          font-size: medium;
         }
       }
 
@@ -71,7 +75,7 @@
         </div>
 
         <div class="fix-div">
-          <button>FIX</button>
+          <button id="fix-btn">FIX</button>
         </div>
 
         <div class="textarea-div">
@@ -84,5 +88,25 @@
         © 2025 fjson | <a href="https://github.com/matx64/fjson"> source</a>
       </footer>
     </main>
+
+    <script type="module">
+      import init, { fix } from "./pkg/fjson_wasm.js";
+
+      init().then(() => {
+        const input_element = document.getElementById("json-input");
+        const output_element = document.getElementById("json-output");
+        const fix_btn = document.getElementById("fix-btn");
+
+        input_element.value = "";
+        output_element.value = "";
+
+        fix_btn.addEventListener("click", () => {
+          const fixed = fix(input_element.value);
+
+          output_element.value = fixed;
+          output_element.disabled = false;
+        });
+      });
+    </script>
   </body>
 </html>

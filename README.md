@@ -8,16 +8,17 @@
 - Repairs incomplete JSON by closing missing brackets and strings.
 - Normalizes boolean and null values (e.g., True → true, FALSE → false)
 - Normalizes numbers (removes trailing zeros, fixes invalid formats).
-- Available as both CLI and WebAssembly library.
+- Available as CLI, Web and WebAssembly library.
 
 ## Roadmap
 
 - [x] Parser + Fixer
-- [ ] Test suite
+- [x] WebAssembly library
+- [x] CLI tool
+- [x] Web version
+- [ ] Github Action for web
 - [ ] Deserialization
 - [ ] Formatting (beautifier)
-- [ ] WebAssembly version
-- [ ] CLI version
 
 ## License
 
