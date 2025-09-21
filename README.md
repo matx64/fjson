@@ -2,6 +2,8 @@
 
 **fjson** is a JSON Parser and Fixer. It takes _any_ input and produces valid JSON. No AI involved.
 
+Web: https://matx64.github.io/fjson
+
 ## Features
 
 - Deserializes everything by default (root and nested).
@@ -15,8 +17,7 @@
 - [x] Parser + Fixer
 - [x] WebAssembly library
 - [x] CLI tool
-- [x] Web version
-- [ ] Github Action for web
+- [x] Web version + CI/CD
 - [ ] Deserialization
 - [ ] Formatting (beautifier)
 
