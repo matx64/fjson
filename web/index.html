@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fjson | fix any json</title>
+    <link rel="stylesheet" href="https://unpkg.com/normalize.css" />
+    <link rel="stylesheet" href="https://unpkg.com/magick.css" />
+  </head>
+  <style>
+    html {
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    main {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
+      text-align: center;
+    }
+
+    header,
+    header * {
+      margin: 0;
+    }
+
+    section {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: stretch;
+      justify-content: center;
+      gap: 1rem;
+
+      .textarea-div {
+        display: flex;
+        flex-direction: column;
+
+        textarea {
+          flex-grow: 1;
+          border: 1px solid var(--form-fg-placeholder);
+        }
+      }
+
+      .fix-div {
+        display: flex;
+        align-items: center;
+
+        button {
+          margin: 0;
+        }
+      }
+    }
+  </style>
+  <body>
+    <main>
+      <header>
+        <hgroup>
+          <h1>fjson</h1>
+          <p>fix <i>any</i> json</p>
+        </hgroup>
+      </header>
+
+      <section>
+        <div class="textarea-div">
+          <h3>Input</h3>
+          <textarea id="json-input" placeholder="type your json"></textarea>
+        </div>
+
+        <div class="fix-div">
+          <button>FIX</button>
+        </div>
+
+        <div class="textarea-div">
+          <h3>Output</h3>
+          <textarea id="json-output" disabled></textarea>
+        </div>
+      </section>
+
+      <footer>
+        © 2025 fjson | <a href="https://github.com/matx64/fjson"> source</a>
+      </footer>
+    </main>
+  </body>
+</html>
