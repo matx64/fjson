@@ -1,8 +1,6 @@
 # fjson-cli
 
-The **fjson** cli tool.
-
-## Examples
+Usage examples:
 
 ```sh
 cat input.json | cargo run --
