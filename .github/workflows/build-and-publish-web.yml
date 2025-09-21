@@ -2,7 +2,7 @@ name: Build Web WASM and Publish Page
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -13,16 +13,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-      
+
       - name: Run tests
         run: cargo test
-  
+
       - name: Install wasm-pack
         run: cargo install wasm-pack
-  
+
       - name: Build Web WASM
-        run: wasm-pack build wasm --target web --out-dir web/pkg
-  
+        run: wasm-pack build wasm --target web --out-dir ../web/pkg
+
       - name: Upload to GH Pages
         uses: actions/upload-pages-artifact@v4
         with:
@@ -38,7 +38,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-      
+
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GH Pages
