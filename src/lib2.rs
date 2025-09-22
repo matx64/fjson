@@ -13,17 +13,12 @@ enum Json {
 struct Parser {
     chars: Vec<char>,
     i: usize,
-    len: usize,
 }
 
 impl Parser {
     pub fn new(input: impl Into<String>) -> Self {
         let chars: Vec<char> = input.into().trim().chars().collect();
-        Self {
-            len: chars.len(),
-            i: 0,
-            chars,
-        }
+        Self { i: 0, chars }
     }
 
     fn peek(&mut self) -> Option<char> {
@@ -56,11 +51,144 @@ impl Parser {
         if let Some(c) = self.peek() {
             match c {
                 't' | 'T' => Json::True,
+                'f' | 'F' => Json::False,
+                'n' | 'N' => Json::Null,
+
+                val if val.is_ascii_digit() || val == '-' => self.parse_number(),
+                '.' => self.parse_float("0"),
+
+                '"' => self.parse_string(),
+
+                '[' => self.parse_array(),
+
+                '{' => self.parse_object(),
 
                 _ => Json::Null,
             }
         } else {
             Json::Null
         }
+    }
+
+    fn parse_number(&mut self) -> Json {
+        let mut lex = String::from(self.next().unwrap());
+
+        while let Some(c) = self.next() {
+            match c {
+                val if val.is_ascii_digit() => {
+                    lex.push(c);
+                }
+
+                'e' | 'E' => {
+                    if !lex.contains('e') {
+                        lex.push('e');
+                    }
+                }
+
+                '+' | '-' => {
+                    if let Some(last) = lex.chars().last()
+                        && last == 'e'
+                    {
+                        lex.push(c);
+                    }
+                }
+
+                '.' => {
+                    if let Some(last) = lex.chars().last()
+                        && last == '-'
+                    {
+                        lex.push('0');
+                    }
+                    return self.parse_float(&lex);
+                }
+
+                _ => {}
+            }
+        }
+
+        Json::Number(self.normalize_number(lex))
+    }
+
+    fn parse_float(&mut self, int_part: &str) -> Json {
+        let mut lex = format!("{}{}", int_part, self.next().unwrap());
+
+        while let Some(c) = self.next() {
+            match c {
+                val if val.is_ascii_digit() => {
+                    lex.push(c);
+                }
+
+                'e' | 'E' => {
+                    if !lex.contains('e') {
+                        lex.push('e');
+                    }
+                }
+
+                '+' | '-' => {
+                    if let Some(last) = lex.chars().last()
+                        && last == 'e'
+                    {
+                        lex.push(c);
+                    }
+                }
+
+                '.' => {}
+
+                _ => {}
+            }
+        }
+
+        Json::Number(self.normalize_number(lex))
+    }
+
+    fn normalize_number(&mut self, lex: String) -> String {
+        let mut result = {
+            if lex.starts_with('-') {
+                lex[1..].to_string()
+            } else {
+                lex.clone()
+            }
+        };
+
+        while result.starts_with('0') {
+            result.remove(0);
+        }
+
+        if result.starts_with('.') {
+            result.insert(0, '0');
+        }
+
+        let mut check_end = true;
+        while check_end {
+            if result.ends_with('.') {
+                result.push('0');
+            } else if result.ends_with('e') || result.ends_with("-") || result.ends_with("+") {
+                result.pop();
+            } else {
+                check_end = false;
+            }
+        }
+
+        if lex.starts_with('-') {
+            result.insert(0, '-');
+        }
+
+        if result.is_empty() || result == "-" {
+            result = String::from('0');
+        }
+
+        result
+    }
+
+    fn parse_string(&mut self) -> Json {
+        todo!()
+    }
+
+    fn parse_array(&mut self) -> Json {
+        todo!()
+    }
+
+    fn parse_object(&mut self) -> Json {
+        todo!()
     }
 }
