@@ -17,8 +17,10 @@ struct Parser {
 
 impl Parser {
     pub fn new(input: impl Into<String>) -> Self {
-        let chars: Vec<char> = input.into().trim().chars().collect();
-        Self { i: 0, chars }
+        Self {
+            chars: input.into().trim().chars().collect(),
+            i: 0,
+        }
     }
 
     fn peek(&mut self) -> Option<char> {
@@ -237,6 +239,34 @@ impl Parser {
     }
 
     fn parse_object(&mut self) -> Json {
-        todo!()
+        let mut obj = HashMap::new();
+
+        self.next();
+
+        loop {
+            self.skip_whitespace();
+
+            if let Some(c) = self.peek() {
+                match c {
+                    '}' => {
+                        self.next();
+                        break;
+                    }
+
+                    '"' => {
+                        let key = match self.parse_string() {
+                            Json::String(s) => s,
+                            _ => unreachable!(),
+                        };
+
+                        obj.insert(key, self.parse_value());
+                    }
+
+                    _ => {}
+                }
+            }
+        }
+
+        Json::Object(obj)
     }
 }
