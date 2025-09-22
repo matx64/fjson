@@ -1,5 +1,10 @@
 use std::collections::HashMap;
 
+pub fn fix(input: impl Into<String>) -> String {
+    let json = Parser::new(input).parse_and_fix();
+    stringify(json)
+}
+
 enum Json {
     Null,
     True,
@@ -274,5 +279,46 @@ impl Parser {
         }
 
         Json::Object(obj)
+    }
+}
+
+pub fn stringify(json: Json) -> String {
+    match json {
+        Json::Null => "null".to_string(),
+        Json::True => "true".to_string(),
+        Json::False => "false".to_string(),
+
+        Json::Number(val) => val,
+        Json::String(val) => val,
+
+        Json::Array(arr) => {
+            let mut result = String::from('[');
+
+            for val in arr {
+                result.push_str(&format!("{},", stringify(val)));
+            }
+
+            if result.ends_with(',') {
+                result.pop();
+            }
+
+            result.push(']');
+            result
+        }
+
+        Json::Object(obj) => {
+            let mut result = String::from('{');
+
+            for (key, val) in obj {
+                result.push_str(&format!("\"{}\":{},", key, stringify(val)));
+            }
+
+            if result.ends_with(',') {
+                result.pop();
+            }
+
+            result.push('}');
+            result
+        }
     }
 }
