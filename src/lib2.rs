@@ -52,9 +52,7 @@ impl Parser {
 
         if let Some(c) = self.peek() {
             match c {
-                't' | 'T' => Json::True,
-                'f' | 'F' => Json::False,
-                'n' | 'N' => Json::Null,
+                'n' | 'N' | 't' | 'T' | 'f' | 'F' => self.parse_static(),
 
                 val if val.is_ascii_digit() || val == '-' => self.parse_number(),
                 '.' => self.parse_float("0"),
@@ -69,6 +67,14 @@ impl Parser {
             }
         } else {
             Json::Null
+        }
+    }
+
+    fn parse_static(&mut self) -> Json {
+        match self.next().unwrap().to_ascii_lowercase() {
+            'n' => Json::Null,
+            't' => Json::True,
+            _ => Json::False,
         }
     }
 
