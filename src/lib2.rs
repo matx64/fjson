@@ -144,7 +144,7 @@ impl Parser {
     fn normalize_number(&mut self, lex: String) -> String {
         let mut result = {
             if lex.starts_with('-') {
-                lex[1..].to_string()
+                lex.strip_prefix('-').unwrap().to_string()
             } else {
                 lex.clone()
             }
@@ -181,7 +181,28 @@ impl Parser {
     }
 
     fn parse_string(&mut self) -> Json {
-        todo!()
+        let mut lex = String::new();
+
+        self.next();
+        while let Some(c) = self.next() {
+            match c {
+                '"' => {
+                    if let Some(last) = lex.chars().last()
+                        && last == '\\'
+                    {
+                        lex.push(c);
+                    } else {
+                        break;
+                    }
+                }
+
+                _ => {
+                    lex.push(c);
+                }
+            }
+        }
+
+        Json::String(lex)
     }
 
     fn parse_array(&mut self) -> Json {
