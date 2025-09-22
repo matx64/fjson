@@ -206,7 +206,34 @@ impl Parser {
     }
 
     fn parse_array(&mut self) -> Json {
-        todo!()
+        let mut arr = Vec::new();
+
+        self.next();
+        self.skip_whitespace();
+
+        if self.peek() == Some(']') {
+            return Json::Array(arr);
+        }
+
+        loop {
+            arr.push(self.parse_value());
+
+            self.skip_whitespace();
+            match self.peek() {
+                Some(',') => {
+                    self.next();
+                }
+
+                Some(']') | None => {
+                    self.next();
+                    break;
+                }
+
+                _ => {}
+            }
+        }
+
+        Json::Array(arr)
     }
 
     fn parse_object(&mut self) -> Json {
