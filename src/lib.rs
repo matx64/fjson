@@ -1,3 +1,5 @@
+mod lib2;
+
 pub fn fix(input: impl Into<String>) -> String {
     Parser::new(input).parse_and_fix()
 }
