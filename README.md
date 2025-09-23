@@ -15,9 +15,9 @@ Web: https://matx64.github.io/fjson
 ## Roadmap
 
 - [x] Parser + Fixer
+- [x] Recursive deserialization
 - [x] WebAssembly library
 - [x] CLI tool, Web + CI/CD
-- [ ] Deserialization
 - [ ] Formatting (beautifier)
 
 ## License

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 pub fn fix(input: impl Into<String>) -> String {
     let json = Parser::new(input).parse_and_fix();
-    json.stringify()
+    json.deserialize_all().stringify()
 }
 
 enum Json {
@@ -308,6 +308,31 @@ impl Parser {
 }
 
 impl Json {
+    pub fn deserialize_all(self) -> Json {
+        match self {
+            Self::String(val) => {
+                let trimmed = val.trim();
+
+                if trimmed.starts_with('{') || trimmed.starts_with('[') {
+                    Parser::new(trimmed).parse_and_fix().deserialize_all()
+                } else {
+                    Json::String(val)
+                }
+            }
+
+            Json::Array(arr) => Json::Array(arr.into_iter().map(|v| v.deserialize_all()).collect()),
+
+            Json::Object((obj, order)) => Json::Object((
+                obj.into_iter()
+                    .map(|(k, v)| (k, v.deserialize_all()))
+                    .collect(),
+                order,
+            )),
+
+            other => other,
+        }
+    }
+
     pub fn stringify(&self) -> String {
         match self {
             Self::Null => "null".to_string(),
