@@ -1,6 +1,6 @@
 # fjson
 
-**fjson** is a JSON Parser and Fixer. It takes _any_ input and produces valid JSON. No AI involved.
+**fjson** is a _zero-dependency_ JSON Parser and Fixer. It takes _any_ input and produces valid JSON. No AI involved.
 
 Web: https://matx64.github.io/fjson
 
@@ -10,6 +10,7 @@ Web: https://matx64.github.io/fjson
 - Repairs incomplete JSON by closing missing brackets and strings.
 - Normalizes boolean and null values (e.g., True → true, FALSE → false)
 - Normalizes numbers (removes trailing zeros, fixes invalid formats).
+- Formatting (beautifier)
 - Available as CLI, Web and WebAssembly library.
 
 ## Roadmap
@@ -18,7 +19,7 @@ Web: https://matx64.github.io/fjson
 - [x] Recursive deserialization
 - [x] WebAssembly library
 - [x] CLI tool, Web + CI/CD
-- [ ] Formatting (beautifier)
+- [x] Formatting (beautifier)
 
 ## License
 

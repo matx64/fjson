@@ -2,7 +2,12 @@ use std::collections::HashMap;
 
 pub fn fix(input: impl Into<String>) -> String {
     let json = Parser::new(input).parse_and_fix();
-    json.deserialize_all().stringify()
+    json.deserialize_all().stringify(0)
+}
+
+pub fn fix_without_formatting(input: impl Into<String>) -> String {
+    let json = Parser::new(input).parse_and_fix();
+    json.deserialize_all().stringify_without_formatting()
 }
 
 enum Json {
@@ -333,7 +338,67 @@ impl Json {
         }
     }
 
-    pub fn stringify(&self) -> String {
+    pub fn stringify(&self, tabs: usize) -> String {
+        const TAB: &str = "   ";
+
+        match self {
+            Self::Null => "null".to_string(),
+            Self::True => "true".to_string(),
+            Self::False => "false".to_string(),
+
+            Self::Number(val) => val.clone(),
+            Self::String(val) => format!("\"{}\"", val),
+
+            Self::Array(arr) => {
+                if arr.is_empty() {
+                    return "[]".to_string();
+                }
+
+                let mut result = String::from("[\n");
+                let tab_str = TAB.repeat(tabs + 1);
+
+                for val in arr {
+                    result.push_str(&format!("{}{},\n", tab_str, val.stringify(tabs + 1)));
+                }
+
+                result.truncate(result.len() - 2);
+
+                result.push('\n');
+                result.push_str(&TAB.repeat(tabs));
+                result.push(']');
+                result
+            }
+
+            Self::Object((obj, order)) => {
+                if obj.is_empty() {
+                    return "{}".to_string();
+                }
+
+                let mut result = String::from("{\n");
+                let tab_str = TAB.repeat(tabs + 1);
+
+                for key in order {
+                    if let Some(val) = obj.get(key) {
+                        result.push_str(&format!(
+                            "{}\"{}\": {},\n",
+                            tab_str,
+                            key,
+                            val.stringify(tabs + 1)
+                        ));
+                    }
+                }
+
+                result.truncate(result.len() - 2);
+
+                result.push('\n');
+                result.push_str(&TAB.repeat(tabs));
+                result.push('}');
+                result
+            }
+        }
+    }
+
+    pub fn stringify_without_formatting(&self) -> String {
         match self {
             Self::Null => "null".to_string(),
             Self::True => "true".to_string(),
@@ -346,7 +411,7 @@ impl Json {
                 let mut result = String::from('[');
 
                 for val in arr {
-                    result.push_str(&format!("{},", val.stringify()));
+                    result.push_str(&format!("{},", val.stringify_without_formatting()));
                 }
 
                 if result.ends_with(',') {
@@ -362,7 +427,11 @@ impl Json {
 
                 for key in order {
                     if let Some(val) = obj.get(key) {
-                        result.push_str(&format!("\"{}\":{},", key, val.stringify()));
+                        result.push_str(&format!(
+                            "\"{}\":{},",
+                            key,
+                            val.stringify_without_formatting()
+                        ));
                     }
                 }
 
