@@ -181,10 +181,25 @@ impl Parser {
         while let Some(c) = self.next() {
             match c {
                 '"' => {
-                    if lex.ends_with('\\') {
-                        lex.push(c);
-                    } else {
-                        break;
+                    break;
+                }
+
+                '\\' => {
+                    if let Some(esc) = self.next() {
+                        match esc {
+                            '"' => lex.push('"'),
+                            '\\' => lex.push('\\'),
+                            '/' => lex.push('/'),
+                            'b' => lex.push('\u{0008}'),
+                            'f' => lex.push('\u{000C}'),
+                            'n' => lex.push('\n'),
+                            'r' => lex.push('\r'),
+                            't' => lex.push('\t'),
+
+                            ch => {
+                                lex.push(ch);
+                            }
+                        }
                     }
                 }
 
