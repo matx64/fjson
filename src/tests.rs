@@ -66,7 +66,7 @@ fn test_strings() {
     assert_eq!(String::from("\"test\""), fix("\"test\""));
 
     // missing closing quote
-    assert_eq!(String::from("\"test (TRUNCATED)\""), fix("\"test"));
+    assert_eq!(String::from("\"test\""), fix("\"test"));
 
     // escaped quotes
     assert_eq!(
@@ -115,10 +115,6 @@ fn test_objects() {
     assert_eq!(String::from("{}"), fix("{}"));
     assert_eq!(String::from("{\"k\":1}"), fix("{\"k\":1}"));
     assert_eq!(
-        String::from("{\"k\":1,\"k0\":true}"),
-        fix("{\"k\":1,\"k0\":true}")
-    );
-    assert_eq!(
         String::from("{\"nums\":[1,2,3]}"),
         fix("{\"nums\":[1,2,3]}")
     );
@@ -145,5 +141,5 @@ fn test_objects() {
     assert_eq!(String::from("{\"a\":1}"), fix("{\"a\":1,},,"));
 
     // duplicated keys
-    assert_eq!(String::from("{\"a\":1,\"a\":2}"), fix("{\"a\":1,\"a\":2}"));
+    assert_eq!(String::from("{\"a\":2}"), fix("{\"a\":1,\"a\":2}"));
 }

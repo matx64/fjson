@@ -251,28 +251,34 @@ impl Parser {
         loop {
             self.skip_whitespace();
 
-            if let Some(c) = self.peek() {
-                match c {
-                    '}' => {
-                        self.next();
-                        break;
-                    }
-
-                    '"' => {
-                        let key = match self.parse_string() {
-                            Json::String(s) => s,
-                            _ => unreachable!(),
-                        };
-
-                        obj.insert(key, self.parse_value());
-                    }
-
-                    _ => {
-                        self.next();
-                    }
+            match self.peek() {
+                Some('}') => {
+                    self.next();
+                    break;
                 }
-            } else {
-                break;
+
+                Some('"') => {
+                    let key = match self.parse_string() {
+                        Json::String(s) => s,
+                        _ => unreachable!(),
+                    };
+
+                    self.skip_whitespace();
+
+                    if self.peek() == Some(':') {
+                        self.next();
+                    }
+
+                    obj.insert(key, self.parse_value());
+                }
+
+                None => {
+                    break;
+                }
+
+                _ => {
+                    self.next();
+                }
             }
         }
 
