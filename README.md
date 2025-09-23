@@ -10,7 +10,7 @@ Web: https://matx64.github.io/fjson
 - Repairs incomplete JSON by closing missing brackets and strings.
 - Normalizes boolean and null values (e.g., True → true, FALSE → false)
 - Normalizes numbers (removes trailing zeros, fixes invalid formats).
-- Formatting (beautifier)
+- Formatting (beautifier).
 - Available as CLI, Web and WebAssembly library.
 
 ## Roadmap

@@ -201,6 +201,12 @@ impl Parser {
                             'r' => lex.push('\r'),
                             't' => lex.push('\t'),
 
+                            'u' => {
+                                if let Some(c) = self.parse_unicode_escape() {
+                                    lex.push(c);
+                                }
+                            }
+
                             ch => {
                                 lex.push(ch);
                             }
@@ -215,6 +221,48 @@ impl Parser {
         }
 
         Json::String(lex)
+    }
+
+    fn parse_unicode_escape(&mut self) -> Option<char> {
+        let mut hex = String::new();
+        for _ in 0..4 {
+            if let Some(c) = self.next() {
+                hex.push(c);
+            } else {
+                return None;
+            }
+        }
+
+        let code = u32::from_str_radix(&hex, 16).ok()?;
+
+        if let Some(ch) = char::from_u32(code) {
+            Some(ch)
+        } else if (0xD800..=0xDBFF).contains(&code) {
+            if let (Some('\\'), Some('u')) = (self.next(), self.next()) {
+                let mut low_hex = String::new();
+                for _ in 0..4 {
+                    if let Some(c) = self.next() {
+                        low_hex.push(c);
+                    } else {
+                        return None;
+                    }
+                }
+
+                let low_code = u32::from_str_radix(&low_hex, 16).ok()?;
+
+                if (0xDC00..=0xDFFF).contains(&low_code) {
+                    let full_code = 0x10000 + ((code - 0xD800) << 10) + (low_code - 0xDC00);
+
+                    char::from_u32(full_code)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 
     fn parse_array(&mut self) -> Json {
