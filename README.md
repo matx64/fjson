@@ -16,8 +16,7 @@ Web: https://matx64.github.io/fjson
 
 - [x] Parser + Fixer
 - [x] WebAssembly library
-- [x] CLI tool
-- [x] Web version + CI/CD
+- [x] CLI tool, Web + CI/CD
 - [ ] Deserialization
 - [ ] Formatting (beautifier)
 

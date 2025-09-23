@@ -59,8 +59,7 @@ impl Parser {
             match c {
                 'n' | 'N' | 't' | 'T' | 'f' | 'F' => self.parse_static(),
 
-                val if val.is_ascii_digit() || val == '-' => self.parse_number(),
-                '.' => self.parse_float("0"),
+                val if val.is_ascii_digit() || val == '-' || val == '.' => self.parse_number(),
 
                 '"' => self.parse_string(),
 
@@ -84,7 +83,15 @@ impl Parser {
     }
 
     fn parse_number(&mut self) -> Json {
-        let mut lex = String::from(self.next().unwrap());
+        let (mut lex, mut is_float) = {
+            let first = self.next().unwrap();
+
+            if first == '.' {
+                (String::from("0."), true)
+            } else {
+                (String::from(first), false)
+            }
+        };
 
         while let Some(c) = self.next() {
             match c {
@@ -99,53 +106,21 @@ impl Parser {
                 }
 
                 '+' | '-' => {
-                    if let Some(last) = lex.chars().last()
-                        && last == 'e'
-                    {
+                    if lex.ends_with('e') {
                         lex.push(c);
                     }
                 }
 
                 '.' => {
-                    if let Some(last) = lex.chars().last()
-                        && last == '-'
-                    {
-                        lex.push('0');
-                    }
-                    return self.parse_float(&lex);
-                }
+                    if !is_float {
+                        if lex.ends_with('-') {
+                            lex.push('0');
+                        }
 
-                _ => {}
-            }
-        }
-
-        Json::Number(self.normalize_number(lex))
-    }
-
-    fn parse_float(&mut self, int_part: &str) -> Json {
-        let mut lex = format!("{}{}", int_part, self.next().unwrap());
-
-        while let Some(c) = self.next() {
-            match c {
-                val if val.is_ascii_digit() => {
-                    lex.push(c);
-                }
-
-                'e' | 'E' => {
-                    if !lex.contains('e') {
-                        lex.push('e');
-                    }
-                }
-
-                '+' | '-' => {
-                    if let Some(last) = lex.chars().last()
-                        && last == 'e'
-                    {
+                        is_float = true;
                         lex.push(c);
                     }
                 }
-
-                '.' => {}
 
                 _ => {}
             }
@@ -200,9 +175,7 @@ impl Parser {
         while let Some(c) = self.next() {
             match c {
                 '"' => {
-                    if let Some(last) = lex.chars().last()
-                        && last == '\\'
-                    {
+                    if lex.ends_with('\\') {
                         lex.push(c);
                     } else {
                         break;
@@ -273,8 +246,12 @@ impl Parser {
                         obj.insert(key, self.parse_value());
                     }
 
-                    _ => {}
+                    _ => {
+                        self.next();
+                    }
                 }
+            } else {
+                break;
             }
         }
 
@@ -290,7 +267,7 @@ impl Json {
             Self::False => "false".to_string(),
 
             Self::Number(val) => val,
-            Self::String(val) => val,
+            Self::String(val) => format!("\"{}\"", val),
 
             Self::Array(arr) => {
                 let mut result = String::from('[');
