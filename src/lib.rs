@@ -12,7 +12,7 @@ enum Json {
     Number(String),
     String(String),
     Array(Vec<Json>),
-    Object(HashMap<String, Json>),
+    Object((HashMap<String, Json>, Vec<String>)),
 }
 
 struct Parser {
@@ -245,6 +245,7 @@ impl Parser {
 
     fn parse_object(&mut self) -> Json {
         let mut obj = HashMap::new();
+        let mut order = Vec::new();
 
         self.next();
 
@@ -269,7 +270,12 @@ impl Parser {
                         self.next();
                     }
 
-                    obj.insert(key, self.parse_value());
+                    if let Some(pos) = order.iter().position(|k| k == &key) {
+                        order.remove(pos);
+                    }
+
+                    obj.insert(key.clone(), self.parse_value());
+                    order.push(key);
                 }
 
                 None => {
@@ -282,18 +288,18 @@ impl Parser {
             }
         }
 
-        Json::Object(obj)
+        Json::Object((obj, order))
     }
 }
 
 impl Json {
-    pub fn stringify(self) -> String {
+    pub fn stringify(&self) -> String {
         match self {
             Self::Null => "null".to_string(),
             Self::True => "true".to_string(),
             Self::False => "false".to_string(),
 
-            Self::Number(val) => val,
+            Self::Number(val) => val.clone(),
             Self::String(val) => format!("\"{}\"", val),
 
             Self::Array(arr) => {
@@ -311,11 +317,13 @@ impl Json {
                 result
             }
 
-            Self::Object(obj) => {
+            Self::Object((obj, order)) => {
                 let mut result = String::from('{');
 
-                for (key, val) in obj {
-                    result.push_str(&format!("\"{}\":{},", key, val.stringify()));
+                for key in order {
+                    if let Some(val) = obj.get(key) {
+                        result.push_str(&format!("\"{}\":{},", key, val.stringify()));
+                    }
                 }
 
                 if result.ends_with(',') {
