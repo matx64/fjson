@@ -67,7 +67,10 @@ impl Parser {
 
                 '{' => self.parse_object(),
 
-                _ => Json::Null,
+                _ => {
+                    self.next();
+                    Json::Null
+                }
             }
         } else {
             Json::Null
@@ -93,7 +96,7 @@ impl Parser {
             }
         };
 
-        while let Some(c) = self.next() {
+        while let Some(c) = self.peek() {
             match c {
                 val if val.is_ascii_digit() => {
                     lex.push(c);
@@ -122,8 +125,11 @@ impl Parser {
                     }
                 }
 
-                _ => {}
+                _ => {
+                    break;
+                }
             }
+            self.next();
         }
 
         Json::Number(self.normalize_number(lex))
@@ -195,27 +201,42 @@ impl Parser {
         let mut arr = Vec::new();
 
         self.next();
-        self.skip_whitespace();
-
-        if self.peek() == Some(']') {
-            return Json::Array(arr);
-        }
 
         loop {
-            arr.push(self.parse_value());
-
             self.skip_whitespace();
-            match self.peek() {
-                Some(',') => {
-                    self.next();
-                }
 
-                Some(']') | None => {
+            match self.peek() {
+                Some(']') => {
                     self.next();
                     break;
                 }
 
-                _ => {}
+                Some(',') => {
+                    self.next();
+                    continue;
+                }
+
+                Some(_) => {
+                    arr.push(self.parse_value());
+
+                    self.skip_whitespace();
+
+                    while let Some(c) = self.peek() {
+                        match c {
+                            ']' | ',' => {
+                                break;
+                            }
+
+                            _ => {
+                                self.next();
+                            }
+                        }
+                    }
+                }
+
+                None => {
+                    break;
+                }
             }
         }
 
