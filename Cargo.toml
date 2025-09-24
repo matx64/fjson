@@ -1,6 +1,6 @@
 [package]
 name = "fjson"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2024"
 description = "fjson is a zero-dependency JSON Parser and Fixer. It takes any input and produces valid JSON. No AI involved."
 repository = "https://github.com/matx64/fjson"

@@ -13,7 +13,7 @@
 - Normalizes boolean and null values (e.g., True → true, FALSE → false).
 - Normalizes numbers (removes trailing zeros, fixes invalid formats).
 - Formatting (beautifier).
-- Available as CLI, Web and WebAssembly library.
+- Available as Web, CLI, Rust and WebAssembly libraries.
 
 ## Usage
 

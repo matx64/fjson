@@ -16,18 +16,18 @@ checksum = "2fd1289c04a9ea8cb22300a459a72a385d7c73d3259e2ed7dcb2af674838cfa9"
 
 [[package]]
 name = "fjson"
-version = "0.0.1"
+version = "0.1.0"
 
 [[package]]
 name = "fjson-cli"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "fjson",
 ]
 
 [[package]]
 name = "fjson-wasm"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "fjson",
  "wasm-bindgen",
