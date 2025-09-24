@@ -96,6 +96,10 @@ impl Parser {
         if let Some('-') = self.peek() {
             lex.push('-');
             self.next();
+
+            while let Some('-') = self.peek() {
+                self.next();
+            }
         }
 
         if let Some('.') = self.peek() {
