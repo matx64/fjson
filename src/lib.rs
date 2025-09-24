@@ -91,92 +91,97 @@ impl Parser {
     }
 
     fn parse_number(&mut self) -> Json {
-        let (mut lex, mut is_float) = {
-            let first = self.next().unwrap();
+        let mut lex = String::new();
 
-            if first == '.' {
-                (String::from("0."), true)
-            } else {
-                (String::from(first), false)
-            }
-        };
-
-        while let Some(c) = self.peek() {
-            match c {
-                val if val.is_ascii_digit() => {
-                    lex.push(c);
-                }
-
-                'e' | 'E' => {
-                    if !lex.contains('e') {
-                        lex.push('e');
-                    }
-                }
-
-                '+' | '-' => {
-                    if lex.ends_with('e') {
-                        lex.push(c);
-                    }
-                }
-
-                '.' => {
-                    if !is_float {
-                        if lex.ends_with('-') {
-                            lex.push('0');
-                        }
-
-                        is_float = true;
-                        lex.push(c);
-                    }
-                }
-
-                _ => {
-                    break;
-                }
-            }
+        if let Some('-') = self.peek() {
+            lex.push('-');
             self.next();
         }
 
-        Json::Number(self.normalize_number(lex))
-    }
-
-    fn normalize_number(&mut self, lex: String) -> String {
-        let mut result = {
-            if lex.starts_with('-') {
-                lex.strip_prefix('-').unwrap().to_string()
-            } else {
-                lex.clone()
-            }
-        };
-
-        while result.starts_with('0') {
-            result.remove(0);
+        if let Some('.') = self.peek() {
+            lex.push('0');
         }
 
-        if result.starts_with('.') {
-            result.insert(0, '0');
-        }
+        // trailing 0
+        if let Some('0') = self.peek() {
+            lex.push('0');
+            self.next();
 
-        let mut check_end = true;
-        while check_end {
-            if result.ends_with('.') {
-                result.push('0');
-            } else if result.ends_with('e') || result.ends_with("-") || result.ends_with("+") {
-                result.pop();
-            } else {
-                check_end = false;
+            while let Some(c) = self.peek() {
+                if c == '0' {
+                    self.next();
+                } else {
+                    if c.is_ascii_digit() {
+                        lex.pop();
+                    }
+                    break;
+                }
             }
         }
 
-        if lex.starts_with('-') {
-            result.insert(0, '-');
+        // integer
+        while let Some(c) = self.peek()
+            && c.is_ascii_digit()
+        {
+            lex.push(c);
+            self.next();
         }
 
-        if result.is_empty() || result == "-" {
-            result = String::from('0');
+        // float
+        if let Some('.') = self.peek() {
+            lex.push('.');
+            self.next();
+
+            let mut count = 0;
+            while let Some(c) = self.peek()
+                && c.is_ascii_digit()
+            {
+                lex.push(c);
+                self.next();
+                count += 1;
+            }
+
+            if count == 0 {
+                lex.push('0');
+            }
         }
 
-        result
+        // expoent
+        if let Some(c) = self.peek()
+            && (c == 'e' || c == 'E')
+        {
+            lex.push(c);
+            self.next();
+
+            if let Some(sign) = self.peek()
+                && (sign == '-' || sign == '+')
+            {
+                lex.push(sign);
+                self.next();
+            }
+
+            let mut count = 0;
+            while let Some(c) = self.peek()
+                && c.is_ascii_digit()
+            {
+                lex.push(c);
+                self.next();
+                count += 1;
+            }
+
+            if count == 0 {
+                if lex.ends_with('-') || lex.ends_with('+') {
+                    lex.pop();
+                }
+                lex.pop();
+            }
+        }
+
+        if lex == "-" {
+            lex.push('0');
+        }
+
+        Json::Number(lex)
     }
 
     fn parse_string(&mut self) -> Json {

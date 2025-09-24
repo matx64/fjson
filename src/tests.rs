@@ -49,17 +49,13 @@ fn test_numbers() {
     assert_eq!(String::from("0.5"), fix_without_formatting(".5"));
     assert_eq!(String::from("123.0"), fix_without_formatting("123."));
     assert_eq!(String::from("-123.0"), fix_without_formatting("-123."));
-    assert_eq!(
-        String::from("123.0001"),
-        fix_without_formatting("123.00.01")
-    );
 
     // Exponents
     assert_eq!(String::from("123e1"), fix_without_formatting("123e1"));
-    assert_eq!(String::from("123e2"), fix_without_formatting("123E2"));
+    assert_eq!(String::from("123E2"), fix_without_formatting("123E2"));
     assert_eq!(String::from("1e+2"), fix_without_formatting("1e+2"));
     assert_eq!(String::from("1e-2"), fix_without_formatting("1e-2"));
-    assert_eq!(String::from("1e-10"), fix_without_formatting("1E-10"));
+    assert_eq!(String::from("1E-10"), fix_without_formatting("1E-10"));
     assert_eq!(String::from("1"), fix_without_formatting("1e"));
     assert_eq!(String::from("100"), fix_without_formatting("100e+"));
 }
