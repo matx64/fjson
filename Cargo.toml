@@ -1,7 +1,13 @@
 [package]
 name = "fjson"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2024"
+description = "fjson is a zero-dependency JSON Parser and Fixer. It takes any input and produces valid JSON. No AI involved."
+repository = "https://github.com/matx64/fjson"
+license = "MIT"
+readme = "README.md"
+keywords = ["json", "parser", "fixer"]
+categories = ["parsing"]
 
 [workspace]
 members = [".", "cli", "wasm"]

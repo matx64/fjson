@@ -347,7 +347,9 @@ impl Parser {
                         self.next();
                     }
 
-                    if let Some(pos) = order.iter().position(|k| k == &key) {
+                    if obj.contains_key(&key)
+                        && let Some(pos) = order.iter().position(|k| k == &key)
+                    {
                         order.remove(pos);
                     }
 
