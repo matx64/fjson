@@ -23,7 +23,7 @@ jobs:
         run: cargo install wasm-pack
 
       - name: Build Web WASM
-        run: wasm-pack build wasm --target web --out-dir ../web/pkg
+        run: wasm-pack build wasm --target web --out-dir ../web/pkg --release
 
       - name: Upload to GH Pages
         uses: actions/upload-pages-artifact@v4

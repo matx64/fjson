@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="fix any json" />
     <title>fjson | fix any json</title>
-    <link rel="stylesheet" href="https://unpkg.com/normalize.css" />
-    <link rel="stylesheet" href="https://unpkg.com/magick.css" />
+
     <link
       rel="apple-touch-icon"
       sizes="180x180"
@@ -25,60 +24,87 @@
       href="./static/favicon-16x16.png"
     />
     <link rel="manifest" href="./static/site.webmanifest" />
-  </head>
-  <style>
-    html {
-      min-height: 100vh;
-      margin: 0;
-    }
 
-    main {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      gap: 3rem;
-      text-align: center;
-      max-width: 900px !important;
-    }
+    <link
+      rel="preload"
+      href="./pkg/fjson_wasm_bg.wasm"
+      as="fetch"
+      type="application/wasm"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="https://unpkg.com/normalize.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript
+      ><link rel="stylesheet" href="https://unpkg.com/normalize.css"
+    /></noscript>
+    <link
+      rel="preload"
+      href="https://unpkg.com/magick.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript
+      ><link rel="stylesheet" href="https://unpkg.com/magick.css"
+    /></noscript>
+    <style>
+      html {
+        min-height: 100vh;
+        margin: 0;
+      }
 
-    header,
-    header * {
-      margin: 0 !important;
-    }
-
-    section {
-      flex-grow: 1;
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: stretch;
-      justify-content: center;
-      gap: 1rem;
-
-      .textarea-div {
-        flex-grow: 1;
+      main {
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
-
-        textarea {
-          flex-grow: 1;
-          border: 1px solid var(--form-fg-placeholder);
-          font-family: monospace;
-          font-size: medium;
-          line-height: 1.4;
-        }
+        gap: 3rem;
+        text-align: center;
+        max-width: 900px !important;
       }
 
-      .fix-div {
+      header,
+      header * {
+        margin: 0 !important;
+      }
+
+      section {
+        flex-grow: 1;
         display: flex;
-        align-items: center;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: stretch;
+        justify-content: center;
+        gap: 1rem;
 
-        button {
-          margin: 0;
+        .textarea-div {
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+
+          textarea {
+            flex-grow: 1;
+            border: 1px solid var(--form-fg-placeholder);
+            font-family: "Courier Prime", monospace;
+            font-size: medium;
+            line-height: 1.2;
+          }
+        }
+
+        .fix-div {
+          display: flex;
+          align-items: center;
+
+          button {
+            margin: 0;
+          }
         }
       }
-    }
-  </style>
+    </style>
+  </head>
+
   <body>
     <main>
       <header>
@@ -90,7 +116,7 @@
 
       <section>
         <div class="textarea-div">
-          <h3>Input</h3>
+          <h2>Input</h2>
           <textarea id="json-input" placeholder="type your json"></textarea>
         </div>
 
@@ -99,8 +125,13 @@
         </div>
 
         <div class="textarea-div">
-          <h3>Output</h3>
-          <textarea id="json-output" disabled></textarea>
+          <h2>Output</h2>
+          <textarea
+            id="json-output"
+            aria-label="json output"
+            disabled
+          ></textarea>
+          <code></code>
         </div>
       </section>
 
