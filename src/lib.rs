@@ -1,23 +1,14 @@
 use std::collections::HashMap;
 
+/// Parses a JSON string and automatically corrects
+/// common issues (e.g., missing brackets, invalid numbers, incomplete literals).
+///
+/// Also deserializes everything by default (root and nested).
+///
+/// Returns a formatted, valid JSON string.
 pub fn fix(input: impl Into<String>) -> String {
     let json = Parser::new(input).parse_and_fix();
     json.deserialize_all().stringify(0)
-}
-
-pub fn fix_without_formatting(input: impl Into<String>) -> String {
-    let json = Parser::new(input).parse_and_fix();
-    json.deserialize_all().stringify_without_formatting()
-}
-
-enum Json {
-    Null,
-    True,
-    False,
-    Number(String),
-    String(String),
-    Array(Vec<Json>),
-    Object((HashMap<String, Json>, Vec<String>)),
 }
 
 struct Parser {
@@ -371,6 +362,16 @@ impl Parser {
     }
 }
 
+enum Json {
+    Null,
+    True,
+    False,
+    Number(String),
+    String(String),
+    Array(Vec<Json>),
+    Object((HashMap<String, Json>, Vec<String>)),
+}
+
 impl Json {
     pub fn deserialize_all(self) -> Json {
         match self {
@@ -457,7 +458,7 @@ impl Json {
         }
     }
 
-    pub fn stringify_without_formatting(&self) -> String {
+    fn _stringify_without_formatting(&self) -> String {
         match self {
             Self::Null => "null".to_string(),
             Self::True => "true".to_string(),
@@ -470,7 +471,7 @@ impl Json {
                 let mut result = String::from('[');
 
                 for val in arr {
-                    result.push_str(&format!("{},", val.stringify_without_formatting()));
+                    result.push_str(&format!("{},", val._stringify_without_formatting()));
                 }
 
                 if result.ends_with(',') {
@@ -489,7 +490,7 @@ impl Json {
                         result.push_str(&format!(
                             "\"{}\":{},",
                             key,
-                            val.stringify_without_formatting()
+                            val._stringify_without_formatting()
                         ));
                     }
                 }
@@ -503,6 +504,11 @@ impl Json {
             }
         }
     }
+}
+
+fn _fix_without_formatting(input: impl Into<String>) -> String {
+    let json = Parser::new(input).parse_and_fix();
+    json.deserialize_all()._stringify_without_formatting()
 }
 
 #[cfg(test)]
