@@ -19,6 +19,10 @@
 
 **Web:** https://matx64.github.io/fjson
 
+**Library:** https://crates.io/crates/fjson-core
+
+**CLI and WebAssembly:** Check the latest [Release Docs](https://github.com/matx64/fjson/releases/latest).
+
 ## License
 
 Copyright © 2025-present, [fjson Contributors](https://github.com/matx64/fjson/graphs/contributors).
