@@ -1,9 +1,6 @@
 name: Build Web WASM and Publish Page
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
   workflow_dispatch:
 
 env:
