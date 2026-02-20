@@ -327,4 +327,3 @@ fn test_empty() {
 
     assert_eq!(String::from("1e999"), fix("1e999"));
 }
-

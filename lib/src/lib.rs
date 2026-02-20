@@ -477,7 +477,6 @@ impl Json {
             }
         }
     }
-
 }
 
 #[cfg(test)]
