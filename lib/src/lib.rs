@@ -97,7 +97,7 @@ impl Parser {
             lex.push('0');
         }
 
-        // trailing 0
+        // leading 0
         if let Some('0') = self.peek() {
             lex.push('0');
             self.next();
@@ -362,6 +362,26 @@ impl Parser {
     }
 }
 
+fn escape_string(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '"' => result.push_str("\\\""),
+            '\\' => result.push_str("\\\\"),
+            '\n' => result.push_str("\\n"),
+            '\r' => result.push_str("\\r"),
+            '\t' => result.push_str("\\t"),
+            '\u{0008}' => result.push_str("\\b"),
+            '\u{000C}' => result.push_str("\\f"),
+            ch if ch < ' ' => {
+                result.push_str(&format!("\\u{:04x}", ch as u32));
+            }
+            ch => result.push(ch),
+        }
+    }
+    result
+}
+
 enum Json {
     Null,
     True,
@@ -407,7 +427,7 @@ impl Json {
             Self::False => "false".to_string(),
 
             Self::Number(val) => val.clone(),
-            Self::String(val) => format!("\"{}\"", val),
+            Self::String(val) => format!("\"{}\"", escape_string(val)),
 
             Self::Array(arr) => {
                 if arr.is_empty() {
@@ -442,7 +462,7 @@ impl Json {
                         result.push_str(&format!(
                             "{}\"{}\": {},\n",
                             tab_str,
-                            key,
+                            escape_string(key),
                             val.stringify(tabs + 1)
                         ));
                     }
@@ -458,57 +478,6 @@ impl Json {
         }
     }
 
-    fn _stringify_without_formatting(&self) -> String {
-        match self {
-            Self::Null => "null".to_string(),
-            Self::True => "true".to_string(),
-            Self::False => "false".to_string(),
-
-            Self::Number(val) => val.clone(),
-            Self::String(val) => format!("\"{}\"", val),
-
-            Self::Array(arr) => {
-                let mut result = String::from('[');
-
-                for val in arr {
-                    result.push_str(&format!("{},", val._stringify_without_formatting()));
-                }
-
-                if result.ends_with(',') {
-                    result.pop();
-                }
-
-                result.push(']');
-                result
-            }
-
-            Self::Object((obj, order)) => {
-                let mut result = String::from('{');
-
-                for key in order {
-                    if let Some(val) = obj.get(key) {
-                        result.push_str(&format!(
-                            "\"{}\":{},",
-                            key,
-                            val._stringify_without_formatting()
-                        ));
-                    }
-                }
-
-                if result.ends_with(',') {
-                    result.pop();
-                }
-
-                result.push('}');
-                result
-            }
-        }
-    }
-}
-
-fn _fix_without_formatting(input: impl Into<String>) -> String {
-    let json = Parser::new(input).parse_and_fix();
-    json.deserialize_all()._stringify_without_formatting()
 }
 
 #[cfg(test)]
