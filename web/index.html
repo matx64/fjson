@@ -63,6 +63,7 @@
         gap: 3rem;
         text-align: center;
         max-width: 900px !important;
+        padding: 1rem;
       }
 
       header,
@@ -83,6 +84,14 @@
           flex-grow: 1;
           display: flex;
           flex-direction: column;
+          min-width: 250px;
+
+          .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+          }
 
           textarea {
             flex-grow: 1;
@@ -90,17 +99,127 @@
             font-family: "Courier Prime", monospace;
             font-size: medium;
             line-height: 1.2;
+            min-height: 300px;
+          }
+
+          textarea:focus {
+            outline: 2px solid var(--link-color);
+            outline-offset: 2px;
           }
         }
 
-        .fix-div {
+        .controls-div {
           display: flex;
+          flex-direction: column;
           align-items: center;
+          justify-content: center;
+          gap: 1rem;
+          min-width: 120px;
 
           button {
             margin: 0;
+            min-height: 48px;
+            min-width: 120px;
+            font-size: 1rem;
+            font-weight: bold;
+          }
+
+          button:focus {
+            outline: 2px solid var(--link-color);
+            outline-offset: 2px;
+          }
+
+          button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+
+          .loading-spinner {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--form-fg-placeholder);
+            border-top-color: var(--link-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          }
+
+          .loading-spinner.active {
+            display: block;
+          }
+
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+
+          .error-message {
+            display: none;
+            color: #dc2626;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            background-color: #fef2f2;
+          }
+
+          .error-message.active {
+            display: block;
           }
         }
+      }
+
+      @media (max-width: 768px) {
+        main {
+          padding: 0.5rem;
+          gap: 1.5rem;
+        }
+
+        section {
+          flex-direction: column;
+        }
+
+        .textarea-div {
+          width: 100%;
+
+          textarea {
+            min-height: 200px;
+          }
+        }
+
+        .controls-div {
+          flex-direction: row;
+          width: 100%;
+          padding: 0.5rem 0;
+
+          button {
+            flex-grow: 1;
+            min-width: 120px;
+          }
+        }
+
+        .header-row h2 {
+          font-size: 1.25rem;
+        }
+      }
+
+      .copy-btn {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+        min-height: 32px;
+        min-width: auto;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        border-radius: 4px;
+        background-color: #f3f4f6;
+        color: #6b7280;
+        margin-left: 0.5rem;
+        vertical-align: middle;
+        line-height: 1;
       }
     </style>
   </head>
@@ -116,48 +235,111 @@
 
       <section>
         <div class="textarea-div">
-          <h2>Input</h2>
-          <textarea id="json-input" placeholder="type your json"></textarea>
+          <div class="header-row">
+            <h2>Input</h2>
+            <button id="clear-btn" class="copy-btn" aria-label="Clear input">Clear</button>
+          </div>
+          <textarea id="json-input" placeholder="type your json" aria-label="JSON input"></textarea>
         </div>
 
-        <div class="fix-div">
-          <button id="fix-btn">FIX</button>
+        <div class="controls-div">
+          <div class="loading-spinner" id="loading-spinner" aria-label="Loading"></div>
+          <div class="error-message" id="error-message"></div>
+          <button id="fix-btn" aria-label="Fix JSON" disabled>FIX</button>
         </div>
 
         <div class="textarea-div">
-          <h2>Output</h2>
-          <textarea
-            id="json-output"
-            aria-label="json output"
-            disabled
-            readonly
-          ></textarea>
+          <div class="header-row">
+            <h2>Output <span id="status-badge" class="status-badge">Ready</span></h2>
+            <button id="copy-btn" class="copy-btn" aria-label="Copy to clipboard" disabled>Copy</button>
+          </div>
+          <textarea id="json-output" aria-label="JSON output" readonly></textarea>
         </div>
       </section>
 
       <footer>
-        © 2025 fjson | <a href="https://github.com/matx64/fjson">source</a>
+        © 2025-∞ fjson | <a href="https://github.com/matx64/fjson">source</a>
       </footer>
     </main>
 
     <script type="module">
       import init, { fix } from "./pkg/fjson_wasm.js";
 
-      init().then(() => {
-        const input_element = document.getElementById("json-input");
-        const output_element = document.getElementById("json-output");
-        const fix_btn = document.getElementById("fix-btn");
+      const input_element = document.getElementById("json-input");
+      const output_element = document.getElementById("json-output");
+      const fix_btn = document.getElementById("fix-btn");
+      const clear_btn = document.getElementById("clear-btn");
+      const copy_btn = document.getElementById("copy-btn");
+      const loading_spinner = document.getElementById("loading-spinner");
+      const error_message = document.getElementById("error-message");
+      const status_badge = document.getElementById("status-badge");
 
+      function show_error(message) {
+        error_message.textContent = message;
+        error_message.classList.add("active");
+        setTimeout(() => {
+          error_message.classList.remove("active");
+        }, 5000);
+      }
+
+      function update_status(status) {
+        status_badge.textContent = status;
+      }
+
+      async function copy_to_clipboard() {
+        try {
+          await navigator.clipboard.writeText(output_element.value);
+          const original_text = copy_btn.textContent;
+          copy_btn.textContent = "Copied!";
+          setTimeout(() => {
+            copy_btn.textContent = original_text;
+          }, 2000);
+        } catch (err) {
+          show_error("Failed to copy to clipboard");
+        }
+      }
+
+      clear_btn.addEventListener("click", () => {
         input_element.value = "";
         output_element.value = "";
-
-        fix_btn.addEventListener("click", () => {
-          const fixed = fix(input_element.value);
-
-          output_element.value = fixed;
-          output_element.disabled = false;
-        });
+        copy_btn.disabled = true;
+        update_status("Ready");
+        input_element.focus();
       });
+
+      copy_btn.addEventListener("click", copy_to_clipboard);
+
+      fix_btn.addEventListener("click", () => {
+        try {
+          const input_value = input_element.value;
+          const fixed = fix(input_value);
+          output_element.value = fixed;
+          copy_btn.disabled = false;
+          update_status("Fixed");
+        } catch (err) {
+          show_error("Failed to fix JSON: " + err.message);
+          update_status("Error");
+        }
+      });
+
+      loading_spinner.classList.add("active");
+      update_status("Loading...");
+
+      init()
+        .then(() => {
+          loading_spinner.classList.remove("active");
+          fix_btn.disabled = false;
+          update_status("Ready");
+          input_element.value = "";
+          output_element.value = "";
+          input_element.focus();
+        })
+        .catch((err) => {
+          loading_spinner.classList.remove("active");
+          show_error("Failed to initialize WASM: " + err.message);
+          update_status("Error");
+          console.error("WASM initialization failed:", err);
+        });
     </script>
   </body>
 </html>
